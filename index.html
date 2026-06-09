@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>手機鏡頭連線 QR Code</title>
+
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://unpkg.com/ml5@0.12.2/dist/ml5.min.js"></script>
+    <script src="sketch.js"></script>
+
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background: #000;
+        color: white;
+        font-family: Arial, sans-serif;
+      }
+      #qr-panel {
+        position: fixed;
+        top: 18px;
+        right: 18px;
+        width: 260px;
+        padding: 12px;
+        background: rgba(0,0,0,0.6);
+        border: 2px solid #fff;
+        border-radius: 14px;
+        z-index: 1000;
+        text-align: center;
+      }
+      #qrcode {
+        margin: 0 auto 8px auto;
+        width: 220px;
+        height: 220px;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        padding: 6px;
+      }
+      #qr-link {
+        word-break: break-all;
+        font-size: 12px;
+        margin-top: 8px;
+      }
+      #qr-note {
+        margin-top: 10px;
+        font-size: 12px;
+        line-height: 1.4;
+        color: #ccc;
+      }
+      #main-msg {
+        position: absolute;
+        left: 10px;
+        top: 10px;
+        z-index: 1001;
+        color: #fff;
+        font-size: 16px;
+        background: rgba(0,0,0,0.6);
+        padding: 8px 12px;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="main-msg">掃描右側 QR Code，用手機連到這個頁面</div>
+    <div id="qr-panel">
+      <div id="qrcode"></div>
+      <div id="qr-link"></div>
+      <div id="qr-note">請確保使用 HTTPS 網址開啟此頁面。只要掃描 QR Code，即可跨網路連線，不需在同一 Wi-Fi。</div>
+    </div>
+
+    <script>
+      function showServerInstruction() {
+        const note = document.getElementById('qr-note');
+        note.textContent = '請用伺服器啟動本頁，並使用瀏覽器訪問本頁後掃描 QR Code。只要掃碼即可跨網路連線，不必在同一局域網。';
+      }
+
+      // 由 sketch.js 呼叫，用來更新 QR Code
+      function updateQRCode(peerId) {
+        // 取得目前網址並加上 room ID
+        let currentUrl = window.location.href.split('?')[0];
+        const url = currentUrl + '?room=' + peerId;
+        
+        const scanUrlElement = document.getElementById('qr-link');
+        const qrcodeContainer = document.getElementById('qrcode');
+        qrcodeContainer.innerHTML = '';
+        const qr = new QRCode(qrcodeContainer, { width: 220, height: 220 });
+        qr.makeCode(url);
+        scanUrlElement.textContent = url;
+      }
+
+      // 如果是手機端（有 room 參數），隱藏掃碼面板
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('room')) {
+        document.getElementById('qr-panel').style.display = 'none';
+        document.getElementById('main-msg').textContent = '手機鏡頭傳送中...請看電腦螢幕';
+      }
+
+      if (window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        showServerInstruction();
+      }
+    </script>
+  </body>
+</html>
